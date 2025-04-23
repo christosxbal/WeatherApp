@@ -1,43 +1,29 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 
-const LocationButton = ({ onLocationFound }) => {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-
+const LocationButton = ({ onLocation }) => {
   const handleLocationClick = () => {
-    setLoading(true);
-    setError("");
-
-    if (!navigator.geolocation) {
-      setError("Geolocation is not supported by your browser.");
-      setLoading(false);
-      return;
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          onLocation(latitude, longitude); // Call the parent function with the coordinates
+        },
+        (error) => {
+          console.error("Error getting location", error);
+        }
+      );
+    } else {
+      console.error("Geolocation is not supported by this browser.");
     }
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const { latitude, longitude } = position.coords;
-        onLocationFound(latitude, longitude); // Call the parent function with the coordinates
-        setLoading(false);
-      },
-      (error) => {
-        setError("Failed to retrieve location. Please try again.");
-        setLoading(false);
-      }
-    );
   };
 
   return (
-    <div className="w-full sm:w-auto">
-      <button
-        onClick={handleLocationClick}
-        className="bg-blue-500 text-white p-2 rounded-md w-full sm:w-auto"
-        disabled={loading}
-      >
-        {loading ? "Locating..." : "Use my location"}
-      </button>
-      {error && <p className="text-red-500 mt-2 text-center">{error}</p>}
-    </div>
+    <button
+      onClick={handleLocationClick}
+      className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
+    >
+      Use my location
+    </button>
   );
 };
 

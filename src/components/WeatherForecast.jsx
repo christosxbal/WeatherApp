@@ -5,9 +5,23 @@ const WeatherForecast = ({ forecastData }) => {
     return <div className="text-center">Forecast data not available.</div>;
   }
 
+  // Group forecast entries by day
+  const dailyForecast = [];
+  const map = {};
+
+  forecastData.list.forEach((item) => {
+    const date = item.dt_txt.split(" ")[0]; // Get date portion only
+
+    // We'll only keep one entry per date (around midday is good)
+    if (!map[date] && item.dt_txt.includes("12:00:00")) {
+      map[date] = true;
+      dailyForecast.push(item);
+    }
+  });
+
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-6">
-      {forecastData.list.slice(0, 5).map((item, index) => (
+      {dailyForecast.map((item, index) => (
         <div key={index} className="bg-white p-4 rounded shadow-md text-center">
           <p>{new Date(item.dt * 1000).toLocaleDateString()}</p>
           <img
