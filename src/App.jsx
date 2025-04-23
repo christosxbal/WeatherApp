@@ -1,132 +1,115 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import SearchBar from "./components/SearchBar";
+import LocationButton from "./components/LocationButton";
 import WeatherCard from "./components/WeatherCard";
-import ForecastList from "./components/ForecastList";
-import HourlyForecast from "./components/HourlyForecast";
+import WeatherForecast from "./components/WeatherForecast";
 
 const App = () => {
-  const [city, setCity] = useState("Αθήνα");
-  const [weather, setWeather] = useState(null);
-  const [forecast, setForecast] = useState([]);
-  const [forecastData, setForecastData] = useState([]);
-  const [selectedDay, setSelectedDay] = useState(null);
-  const [error, setError] = useState(null);
+  const [city, setCity] = useState("");
+  const [weatherData, setWeatherData] = useState(null);
+  const [forecastData, setForecastData] = useState(null);
+  const [error, setError] = useState("");
 
-  const API_KEY = import.meta.env.VITE_OPENWEATHER_API_KEY;
+  // Function to fetch weather data
+  const fetchWeatherData = async (city) => {
+    const API_KEY = import.meta.env.VITE_OPENWEATHER_API_KEY; // Correct way to access environment variable in Vite
+    const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=${API_KEY}`;
 
-  const fetchWeatherData = async (cityName) => {
     try {
-      setError(null);
+      const response = await fetch(url);
+      const data = await response.json();
 
-      const weatherRes = await fetch(
-        `https://api.openweathermap.org/data/2.5/weather?q=${cityName}&units=metric&lang=el&appid=${API_KEY}`
-      );
-      const weatherData = await weatherRes.json();
+      console.log(data); // Log the response to inspect the data structure
 
-      if (weatherData.cod === "404") {
-        setError("Η πόλη δεν βρέθηκε. Προσπαθήστε ξανά.");
-        setWeather(null);
-        setForecast([]);
-        setForecastData([]);
-        setSelectedDay(null);
-        return;
+      if (response.ok) {
+        // If the response is OK, process the data
+        setWeatherData(data);
+        setError("");
+      } else {
+        // If the API returns an error (e.g., city not found)
+        setError(data.message || "City not found");
+        setWeatherData(null); // Clear previous weather data
       }
-
-      setWeather(weatherData);
-
-      const forecastRes = await fetch(
-        `https://api.openweathermap.org/data/2.5/forecast?q=${cityName}&units=metric&lang=el&appid=${API_KEY}`
-      );
-      const forecastJson = await forecastRes.json();
-      const fullList = forecastJson.list;
-
-      const daily = fullList.filter((item) => item.dt_txt.includes("12:00:00"));
-
-      setForecast(daily);
-      setForecastData(fullList);
-      setSelectedDay(null);
     } catch (err) {
-      console.error("Σφάλμα κατά την ανάκτηση δεδομένων:", err);
-      setError("Κάτι πήγε στραβά. Δοκιμάστε ξανά.");
+      // Handle network or other errors
+      setError("Something went wrong while fetching weather data.");
+      setWeatherData(null); // Clear previous weather data
     }
   };
 
-  const handleUseMyLocation = () => {
-    if (!navigator.geolocation) {
-      setError("Ο περιηγητής σας δεν υποστηρίζει τοποθεσία.");
-      return;
-    }
+  // Function to fetch weather forecast data
+  const fetchForecastData = async (lat, lon) => {
+    const API_KEY = import.meta.env.VITE_OPENWEATHER_API_KEY;
+    const url = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&units=metric&appid=${API_KEY}`;
 
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const { latitude, longitude } = position.coords;
+    try {
+      const response = await fetch(url);
+      const data = await response.json();
 
-        try {
-          setError(null);
-
-          const weatherRes = await fetch(
-            `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&units=metric&lang=el&appid=${API_KEY}`
-          );
-          const weatherData = await weatherRes.json();
-          setWeather(weatherData);
-
-          const forecastRes = await fetch(
-            `https://api.openweathermap.org/data/2.5/forecast?lat=${latitude}&lon=${longitude}&units=metric&lang=el&appid=${API_KEY}`
-          );
-          const forecastJson = await forecastRes.json();
-          const fullList = forecastJson.list;
-
-          const daily = fullList.filter((item) =>
-            item.dt_txt.includes("12:00:00")
-          );
-
-          setForecast(daily);
-          setForecastData(fullList);
-          setSelectedDay(null);
-          setCity(weatherData.name);
-        } catch (err) {
-          console.error(err);
-          setError("Απέτυχε η λήψη τοποθεσίας.");
-        }
-      },
-      (error) => {
-        console.error(error);
-        setError("Δεν ήταν δυνατή η πρόσβαση στην τοποθεσία.");
+      if (response.ok) {
+        // If the response is OK, process the data
+        setForecastData(data);
+      } else {
+        // Handle forecast error
+        setError("Error fetching forecast data.");
       }
-    );
+    } catch (err) {
+      setError("Something went wrong while fetching forecast data.");
+    }
   };
 
-  useEffect(() => {
-    fetchWeatherData(city);
-  }, [city]);
+  // Handle search form submission
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (city.trim()) {
+      fetchWeatherData(city);
+    }
+  };
 
-  const handleCitySearch = (newCity) => {
-    setCity(newCity);
+  // Handle location button click
+  const handleLocationFound = (latitude, longitude) => {
+    fetchWeatherDataByCoordinates(latitude, longitude);
+    fetchForecastData(latitude, longitude);
+  };
+
+  // Function to fetch weather data by coordinates (for geolocation)
+  const fetchWeatherDataByCoordinates = async (lat, lon) => {
+    const API_KEY = import.meta.env.VITE_OPENWEATHER_API_KEY;
+    const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&appid=${API_KEY}`;
+
+    try {
+      const response = await fetch(url);
+      const data = await response.json();
+
+      if (response.ok) {
+        setWeatherData(data);
+        setError("");
+      } else {
+        setError(data.message || "Error fetching weather data.");
+      }
+    } catch (err) {
+      setError("Something went wrong while fetching weather data.");
+    }
   };
 
   return (
-    <div className="min-h-screen bg-blue-100 flex flex-col items-center p-4">
-      <h1 className="text-4xl font-bold text-blue-700 mb-6">Καιρός</h1>
+    <div className="container mx-auto p-4">
+      <h1 className="text-3xl font-bold text-center text-blue-600 mb-4">
+        Weather App
+      </h1>
 
-      <div className="flex space-x-4 mb-4">
-        <SearchBar onSearch={handleCitySearch} />
-        <button
-          onClick={handleUseMyLocation}
-          className="bg-green-500 text-white px-4 py-1 rounded-md shadow hover:bg-green-600"
-        >
-          Χρήση τοποθεσίας μου
-        </button>
-      </div>
+      <SearchBar
+        value={city}
+        onChange={(e) => setCity(e.target.value)}
+        onSearch={handleSearch}
+      />
+      <LocationButton onLocationFound={handleLocationFound} />
 
-      {error && (
-        <div className="bg-red-100 text-red-700 px-4 py-2 rounded-md mb-4">
-          {error}
-        </div>
-      )}
+      {error && <p className="text-red-500 mt-2 text-center">{error}</p>}
 
-      <WeatherCard weather={weather} />
-      <ForecastList forecast={forecast} onSelectDay={setSelectedDay} />
-      <HourlyForecast forecast={forecastData} selectedDate={selectedDay} />
+      {weatherData && <WeatherCard weatherData={weatherData} />}
+
+      {forecastData && <WeatherForecast forecastData={forecastData} />}
     </div>
   );
 };

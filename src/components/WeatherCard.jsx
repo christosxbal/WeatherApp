@@ -1,22 +1,31 @@
 import React from "react";
 
-const WeatherCard = ({ weather }) => {
-  if (!weather) return null;
+const WeatherCard = ({ weatherData }) => {
+  // Check if weatherData exists and has the 'weather' property
+  if (!weatherData || !weatherData.weather) {
+    return (
+      <div className="text-center text-red-500">
+        Weather data is not available.
+      </div>
+    );
+  }
 
-  const { name, main, weather: details } = weather;
-  const icon = details[0].icon;
-  const description = details[0].description;
+  const { main, weather, wind } = weatherData;
 
   return (
-    <div className="bg-white shadow-md rounded-xl p-6 text-center">
-      <h2 className="text-2xl font-bold">{name}</h2>
-      <img
-        src={`https://openweathermap.org/img/wn/${icon}@2x.png`}
-        alt={description}
-        className="mx-auto"
-      />
-      <p className="text-lg capitalize">{description}</p>
-      <p className="text-4xl font-bold">{Math.round(main.temp)}°C</p>
+    <div className="bg-white p-4 rounded-lg shadow-md">
+      <h2 className="text-2xl font-semibold text-center">{weatherData.name}</h2>
+      <div className="flex justify-center mt-4">
+        <img
+          src={`https://openweathermap.org/img/wn/${weather[0].icon}@2x.png`}
+          alt={weather[0].description}
+          className="w-16 h-16"
+        />
+      </div>
+      <p className="text-center text-xl">{weather[0].description}</p>
+      <p className="text-center text-2xl">{main.temp}°C</p>
+      <p className="text-center">{`Humidity: ${main.humidity}%`}</p>
+      <p className="text-center">{`Wind: ${wind.speed} m/s`}</p>
     </div>
   );
 };
