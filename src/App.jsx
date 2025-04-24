@@ -79,14 +79,18 @@ const App = () => {
   const handleLocationFound = (lat, lon) => {
     const fetchCurrentAndForecast = async () => {
       try {
+        // Reset the hourly forecast and chart data
+        setSelectedDayData([]); // Clear the previous hourly forecast data
+
         const response = await fetch(
           `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&appid=${API_KEY}`
         );
         const data = await response.json();
+
         if (response.ok) {
           setWeatherData(data);
           setError(null);
-          fetchForecastData(lat, lon);
+          fetchForecastData(lat, lon); // Fetch forecast data
         } else {
           setError("Location weather not available.");
         }
@@ -102,7 +106,7 @@ const App = () => {
     <div className="min-h-screen bg-amber-50 text-black p-4">
       <div className="max-w-xl mx-auto space-y-4">
         <h1 className="text-3xl font-bold text-center">Weather App</h1>
-        <div className="flex gap-2 justify-center relative">
+        <div className="flex flex-col sm:flex-row gap-2 justify-center relative">
           <SearchBar
             onSearch={handleSearch}
             searchQuery={searchQuery}
@@ -122,11 +126,8 @@ const App = () => {
         )}
 
         <WeatherForecast data={forecastData} onDaySelect={setSelectedDayData} />
-        {/* Reset the HourlyForecast if no day is selected */}
         {selectedDayData.length > 0 && (
-          <>
-            <HourlyForecast data={selectedDayData} />
-          </>
+          <HourlyForecast data={selectedDayData} />
         )}
       </div>
     </div>

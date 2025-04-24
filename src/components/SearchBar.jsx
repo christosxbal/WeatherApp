@@ -48,25 +48,28 @@ const SearchBar = ({
   );
 
   return (
-    <form onSubmit={handleSubmit} className="relative flex items-center">
+    <form
+      onSubmit={handleSubmit}
+      className="relative flex flex-col sm:flex-row items-center w-full sm:w-auto"
+    >
       <input
         type="text"
         value={searchQuery}
         onChange={handleChange}
         onFocus={() => setShowDropdown(true)}
         onKeyDown={handleKeyDown}
-        className="p-2 border rounded w-64"
+        className="w-full sm:w-64 p-2 border rounded mb-2 sm:mb-0 sm:mr-2"
         placeholder="Search for a city"
       />
       <button
         type="submit"
-        className="ml-2 p-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+        className="w-full sm:w-auto p-2 bg-blue-500 text-white rounded hover:bg-blue-600"
       >
         Search
       </button>
 
       {showDropdown && searchQuery && (
-        <ul className="absolute top-full left-0 w-full bg-white border rounded mt-1 shadow-lg">
+        <ul className="absolute top-full left-0 w-full sm:w-64 bg-white border rounded mt-1 shadow-lg z-10">
           {filteredHistory.length > 0 ? (
             filteredHistory.map((city, index) => (
               <li
