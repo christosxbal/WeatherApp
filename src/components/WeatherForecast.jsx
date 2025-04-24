@@ -1,36 +1,37 @@
 import React from "react";
+import dayjs from "dayjs";
 
-const WeatherForecast = ({ forecastData }) => {
-  if (!forecastData || !forecastData.list) {
-    return <div className="text-center">Forecast data not available.</div>;
-  }
+const WeatherForecast = ({ data, onDaySelect }) => {
+  if (!data || !data.list) return null;
 
-  // Group forecast entries by day
-  const dailyForecast = [];
-  const map = {};
+  const dailyMap = {};
 
-  forecastData.list.forEach((item) => {
-    const date = item.dt_txt.split(" ")[0]; // Get date portion only
+  data.list.forEach((item) => {
+    const day = dayjs(item.dt_txt).format("YYYY-MM-DD");
+    if (!dailyMap[day]) dailyMap[day] = [];
+    dailyMap[day].push(item);
+  });
 
-    // We'll only keep one entry per date (around midday is good)
-    if (!map[date] && item.dt_txt.includes("12:00:00")) {
-      map[date] = true;
-      dailyForecast.push(item);
-    }
+  const dailySummaries = Object.entries(dailyMap).map(([date, entries]) => {
+    const mid = entries[Math.floor(entries.length / 2)];
+    return { date, summary: mid };
   });
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-6">
-      {dailyForecast.map((item, index) => (
-        <div key={index} className="bg-white p-4 rounded shadow-md text-center">
-          <p>{new Date(item.dt * 1000).toLocaleDateString()}</p>
+    <div className="grid grid-cols-2 gap-4">
+      {dailySummaries.map(({ date, summary }) => (
+        <div
+          key={date}
+          onClick={() => onDaySelect(dailyMap[date])}
+          className="bg-white shadow-lg bg-opacity-20 p-4 rounded-lg cursor-pointer hover:bg-opacity-30"
+        >
+          <p className="font-bold">{dayjs(date).format("dddd")}</p>
+          <p>{Math.round(summary.main.temp)}°C</p>
           <img
-            src={`https://openweathermap.org/img/wn/${item.weather[0].icon}@2x.png`}
-            alt={item.weather[0].description}
-            className="mx-auto"
+            src={`https://openweathermap.org/img/wn/${summary.weather[0].icon}@2x.png`}
+            alt="icon"
+            className="w-18 h-18 mx-auto  "
           />
-          <p>{item.weather[0].main}</p>
-          <p>{Math.round(item.main.temp)}°C</p>
         </div>
       ))}
     </div>
