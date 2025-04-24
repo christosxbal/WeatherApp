@@ -38,6 +38,7 @@ const App = () => {
         `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&units=metric&appid=${API_KEY}`
       );
       const data = await response.json();
+      console.log(data);
 
       if (response.ok && data.list) {
         setForecastData(data);
