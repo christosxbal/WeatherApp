@@ -1,5 +1,5 @@
 import React from "react";
-import HourlyForecastChart from "./HourlyForeCastChart";
+import HourlyForecastChart from "./HourlyForeCastChart.jsx";
 
 const HourlyForecast = ({ data }) => {
   return (
